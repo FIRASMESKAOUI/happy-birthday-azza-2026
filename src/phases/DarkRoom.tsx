@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { config } from '../config';
 import { startIntroMusic, stopIntroMusic } from '../musicEngine';
 
@@ -45,17 +45,113 @@ const CLOUDS = [
   { id: 6, top: '72%', left: '2%',  width: 190, dir: 'r', dur: 13,  opacity: 0.20, delay: 1.5 },
 ];
 
+// ─── Target: midnight Oct 11, 2026 Tunisia time (UTC+1) ─────────
+// 2026-10-11T00:00:00+01:00 = 2026-10-10T23:00:00Z
+const TARGET_UTC = Date.UTC(2026, 9, 10, 23, 0, 0); // month is 0-indexed
+
+function getTimeLeft() {
+  const now = Date.now();
+  const diff = TARGET_UTC - now;
+  if (diff <= 0) return { hours: 0, minutes: 0, seconds: 0, done: true };
+  const totalSec = Math.floor(diff / 1000);
+  const hours = Math.floor(totalSec / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = totalSec % 60;
+  return { hours, minutes, seconds, done: false };
+}
+
+// ─── Countdown digit card ────────────────────────────────────────
+const CountdownCard: React.FC<{ value: number; label: string }> = ({ value, label }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+    <motion.div
+      style={{
+        background: 'rgba(255, 182, 213, 0.15)',
+        backdropFilter: 'blur(12px)',
+        border: '1.5px solid rgba(255, 182, 213, 0.35)',
+        borderRadius: 16,
+        padding: '10px 14px',
+        minWidth: 62,
+        textAlign: 'center',
+        boxShadow: '0 4px 20px rgba(249, 168, 212, 0.2), inset 0 1px 0 rgba(255,255,255,0.15)',
+      }}
+      animate={{ scale: [1, 1.03, 1] }}
+      transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+    >
+      <AnimatePresence mode="popLayout">
+        <motion.span
+          key={value}
+          initial={{ y: -12, opacity: 0, scale: 0.8 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 12, opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+          style={{
+            display: 'block',
+            fontFamily: "'Nunito', sans-serif",
+            fontSize: 'clamp(26px, 5vw, 36px)',
+            fontWeight: 900,
+            color: '#f9a8d4',
+            textShadow: '0 0 16px rgba(249, 168, 212, 0.6)',
+            lineHeight: 1,
+          }}
+        >
+          {String(value).padStart(2, '0')}
+        </motion.span>
+      </AnimatePresence>
+    </motion.div>
+    <span
+      style={{
+        fontFamily: "'Nunito', sans-serif",
+        fontSize: 10,
+        fontWeight: 700,
+        color: 'rgba(200, 180, 230, 0.7)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.12em',
+      }}
+    >
+      {label}
+    </span>
+  </div>
+);
+
+// ─── Separator (colon) ───────────────────────────────────────────
+const Separator: React.FC = () => (
+  <motion.span
+    style={{
+      fontFamily: "'Nunito', sans-serif",
+      fontSize: 'clamp(22px, 4vw, 30px)',
+      fontWeight: 900,
+      color: '#f9a8d4',
+      textShadow: '0 0 12px rgba(249, 168, 212, 0.5)',
+      marginTop: -8,
+    }}
+    animate={{ opacity: [1, 0.3, 1] }}
+    transition={{ duration: 1, repeat: Infinity }}
+  >
+    :
+  </motion.span>
+);
+
 // ─── DarkRoom Component ─────────────────────────────────────────
 interface DarkRoomProps {
   onLightsOn: () => void;
 }
 
 const DarkRoom: React.FC<DarkRoomProps> = ({ onLightsOn }) => {
+  const [timeLeft, setTimeLeft] = useState(getTimeLeft);
+
   useEffect(() => {
     startIntroMusic();
   }, []);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(getTimeLeft());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const handleLightsOn = () => {
+    if (!timeLeft.done) return;
     stopIntroMusic();
     onLightsOn();
   };
@@ -197,22 +293,78 @@ const DarkRoom: React.FC<DarkRoomProps> = ({ onLightsOn }) => {
           {config.darkRoom.subtitle}
         </p>
 
+        {/* ── Countdown timer ────────────────────────────── */}
+        {!timeLeft.done && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginTop: 8 }}
+          >
+            <span
+              style={{
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'rgba(249, 168, 212, 0.7)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+              }}
+            >
+              ✨ the magic begins in ✨
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <CountdownCard value={timeLeft.hours} label="hours" />
+              <Separator />
+              <CountdownCard value={timeLeft.minutes} label="min" />
+              <Separator />
+              <CountdownCard value={timeLeft.seconds} label="sec" />
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── Celebration when countdown ends ─────────────── */}
+        {timeLeft.done && (
+          <motion.p
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 10 }}
+            style={{
+              fontFamily: "'Nunito', sans-serif",
+              fontSize: 14,
+              fontWeight: 700,
+              color: '#f9a8d4',
+              textShadow: '0 0 12px rgba(249,168,212,0.5)',
+              marginTop: 4,
+            }}
+          >
+            🎉 it's time, honey! 🎉
+          </motion.p>
+        )}
+
         {/* Modern Kawaii Turn on the light button */}
         <motion.button
           className="relative mt-4 flex items-center justify-center px-9 py-3.5 rounded-full font-bold text-white shadow-xl overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #fde047 0%, #f472b6 55%, #db2777 100%)',
-            border: '1.5px solid rgba(255,255,255,0.7)',
+            background: timeLeft.done
+              ? 'linear-gradient(135deg, #fde047 0%, #f472b6 55%, #db2777 100%)'
+              : 'linear-gradient(135deg, #555 0%, #444 55%, #333 100%)',
+            border: timeLeft.done
+              ? '1.5px solid rgba(255,255,255,0.7)'
+              : '1.5px solid rgba(255,255,255,0.15)',
             fontSize: 15,
             fontFamily: "'Nunito', sans-serif",
-            cursor: 'pointer',
             letterSpacing: '0.04em',
-            boxShadow: '0 12px 32px -4px rgba(244,114,182,0.65), 0 0 20px rgba(253,224,71,0.35)',
-            textShadow: '0 1px 3px rgba(0,0,0,0.2)',
+            boxShadow: timeLeft.done
+              ? '0 12px 32px -4px rgba(244,114,182,0.65), 0 0 20px rgba(253,224,71,0.35)'
+              : '0 4px 12px rgba(0,0,0,0.3)',
+            textShadow: timeLeft.done ? '0 1px 3px rgba(0,0,0,0.2)' : 'none',
+            opacity: timeLeft.done ? 1 : 0.5,
+            pointerEvents: timeLeft.done ? 'auto' : 'none',
           }}
           onClick={handleLightsOn}
-          whileHover={{ scale: 1.06, y: -2 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={timeLeft.done ? { scale: 1.06, y: -2 } : {}}
+          whileTap={timeLeft.done ? { scale: 0.95 } : {}}
         >
           {/* Subtle glossy glass reflection overlay */}
           <span
@@ -222,16 +374,18 @@ const DarkRoom: React.FC<DarkRoomProps> = ({ onLightsOn }) => {
             }}
           />
           {/* Subtle pulse ring */}
-          <span
-            className="absolute inset-0 rounded-full pointer-events-none"
-            style={{
-              animation: 'pulse-ring 2.2s ease-out infinite',
-              background: 'rgba(255,255,255,0.25)',
-            }}
-          />
+          {timeLeft.done && (
+            <span
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                animation: 'pulse-ring 2.2s ease-out infinite',
+                background: 'rgba(255,255,255,0.25)',
+              }}
+            />
+          )}
           <span className="relative z-10 flex items-center gap-2">
-            <span>{config.darkRoom.buttonLabel}</span>
-            <span className="text-sm font-bold opacity-90">✦</span>
+            <span>{timeLeft.done ? config.darkRoom.buttonLabel : '🔒 not yet, honey...'}</span>
+            {timeLeft.done && <span className="text-sm font-bold opacity-90">✦</span>}
           </span>
         </motion.button>
       </motion.div>
