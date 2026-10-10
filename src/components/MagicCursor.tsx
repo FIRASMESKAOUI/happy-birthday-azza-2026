@@ -7,14 +7,9 @@ const MagicCursor: React.FC = () => {
 
     const handleMove = (e: MouseEvent | TouchEvent) => {
       const now = Date.now();
-      if (now - lastTime < 30) return; // Throttle to roughly 30fps for cursor
+      if (now - lastTime < 40) return;
       lastTime = now;
 
-      const el = document.createElement('div');
-      el.className = 'magic-cursor-particle';
-      const isStar = Math.random() > 0.5;
-      el.textContent = isStar ? '✨' : '💖';
-      
       let x, y;
       if ('touches' in e && (e as TouchEvent).touches.length > 0) {
         x = (e as TouchEvent).touches[0].clientX;
@@ -23,20 +18,39 @@ const MagicCursor: React.FC = () => {
         x = (e as MouseEvent).clientX;
         y = (e as MouseEvent).clientY;
       }
-      
-      const offsetX = (Math.random() - 0.5) * 20;
-      const offsetY = (Math.random() - 0.5) * 20;
-      
-      el.style.left = `${x + offsetX}px`;
-      el.style.top = `${y + offsetY}px`;
-      
-      document.body.appendChild(el);
-      
-      setTimeout(() => {
-        if (el.parentNode) {
-          el.parentNode.removeChild(el);
-        }
-      }, 1000);
+
+      // Bottom tip of wand is at ~(10,34) relative to hotspot (34,10)
+      const baseX = x - 24;
+      const baseY = y + 24;
+
+      // ── Smoke puff (pink cloud) ──
+      const smoke = document.createElement('div');
+      smoke.className = 'magic-smoke';
+      const smokeOffX = (Math.random() - 0.5) * 8;
+      const smokeOffY = (Math.random() - 0.5) * 6;
+      smoke.style.left = `${baseX + smokeOffX}px`;
+      smoke.style.top = `${baseY + smokeOffY}px`;
+      // Random drift direction for fluid feel
+      const driftX = (Math.random() - 0.5) * 40;
+      smoke.style.setProperty('--drift-x', `${driftX}px`);
+      document.body.appendChild(smoke);
+      setTimeout(() => smoke.remove(), 1400);
+
+      // ── Emoji (star or heart) ── spawns every other tick
+      if (Math.random() > 0.4) {
+        const emoji = document.createElement('div');
+        emoji.className = 'magic-emoji';
+        emoji.textContent = Math.random() > 0.5 ? '✨' : '💖';
+        const emojiOffX = (Math.random() - 0.5) * 14;
+        const emojiOffY = (Math.random()) * 6;
+        emoji.style.left = `${baseX + emojiOffX}px`;
+        emoji.style.top = `${baseY + emojiOffY}px`;
+        // Random sideways drift
+        const eDriftX = (Math.random() - 0.5) * 30;
+        emoji.style.setProperty('--emoji-drift', `${eDriftX}px`);
+        document.body.appendChild(emoji);
+        setTimeout(() => emoji.remove(), 1200);
+      }
     };
 
     window.addEventListener('mousemove', handleMove);

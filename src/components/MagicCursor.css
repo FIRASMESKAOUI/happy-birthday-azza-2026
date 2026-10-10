@@ -1,18 +1,55 @@
-.magic-cursor-particle {
+/* ── Smoke puff: soft, fluid pink cloud ── */
+.magic-smoke {
   position: fixed;
   pointer-events: none;
-  z-index: 9999;
-  font-size: 16px;
-  animation: floatUp 1s ease-out forwards;
+  z-index: 9998;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 182, 193, 0.7) 0%, rgba(255, 192, 203, 0.25) 55%, transparent 85%);
+  animation: smokeFloat 1.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
 
-@keyframes floatUp {
+@keyframes smokeFloat {
   0% {
-    opacity: 1;
-    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 0.8;
+    transform: translate(0, 0) scale(0.5);
+    filter: blur(1px);
+  }
+  40% {
+    opacity: 0.5;
+    transform: translate(var(--drift-x, 10px), 30px) scale(2);
+    filter: blur(3px);
   }
   100% {
     opacity: 0;
-    transform: translateY(-40px) scale(0.5) rotate(20deg);
+    transform: translate(var(--drift-x, 10px), 65px) scale(3.5);
+    filter: blur(6px);
+  }
+}
+
+/* ── Emoji: stars & hearts falling independently ── */
+.magic-emoji {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  font-size: 9px;
+  animation: emojiFall 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes emojiFall {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(var(--emoji-drift, 5px), 35px) scale(0.8) rotate(60deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--emoji-drift, 5px), 70px) scale(0.4) rotate(140deg);
   }
 }
