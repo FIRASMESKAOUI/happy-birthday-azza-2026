@@ -4,6 +4,7 @@ import { config } from '../config';
 import { playBgMusicMp3 } from '../musicEngine';
 import helloKittyGif from '../assets/hellokitty.gif';
 import { Cake3D } from './Cake3D';
+import HeartShower from '../components/HeartShower';
 
 // ─── Decorative balloon (top of page) ──────────────────────────
 interface DecorBalloonProps {
@@ -180,7 +181,9 @@ const SceneBtn: React.FC<SceneBtnProps> = ({ label, sublabel, gradient, shadow, 
 );
 
 // ─── LitRoom ─────────────────────────────────────────────────────
-interface LitRoomProps { onCutCake: () => void; }
+interface LitRoomProps { 
+  onCutCake: () => void;
+}
 
 const LitRoom: React.FC<LitRoomProps> = ({ onCutCake }) => {
   // -1 = attente que l'animation du 1er frame finisse d'abord, 0 = musique, 1 = décoration, 2 = ballons, 3 = light candles, 4 = gâteau
@@ -256,6 +259,9 @@ const LitRoom: React.FC<LitRoomProps> = ({ onCutCake }) => {
       className="fixed inset-0 overflow-y-auto flex flex-col items-center justify-center p-4"
       style={{ background: 'linear-gradient(160deg, #fff5f0 0%, #ffeef4 40%, #fff5f8 100%)' }}
     >
+      {/* ── Heart Shower when decorated ── */}
+      {decorated && !isLighting && !candlesLit[0] && step < 4 && <HeartShower />}
+      
       {/* ── Multicolor fairy-lights string (appears when decorated) ── */}
       <AnimatePresence>
         {decorated && (

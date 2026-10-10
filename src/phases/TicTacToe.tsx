@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import HeartShower from '../components/HeartShower';
 
 // ─── Types ────────────────────────────────────────────────────────
 type CellValue = 'X' | 'O' | null;
@@ -74,75 +75,6 @@ const STARS = Array.from({ length: 60 }, (_, i) => ({
   dur: 1.5 + (i % 4) * 0.5,
   delay: (i * 0.2) % 3,
 }));
-
-// ─── Confetti & Celebration Particles ─────────────────────────────
-const CONFETTI_COLORS = ['#f48fb1', '#f43f5e', '#ec4899', '#ffb74d', '#ce93d8', '#60a5fa', '#34d399', '#fde047'];
-const CELEBRATION_STICKERS = [
-  '💖', '🎉', '👑', '🧸', '🥳', '💍', '✨', '🎀',
-  '💌', '🌸', '🌹', '🎂', '🎈', '💕', '⭐', '❤️'
-];
-
-const ConfettiParticle: React.FC<{ index: number }> = ({ index }) => {
-  const color = CONFETTI_COLORS[index % CONFETTI_COLORS.length];
-  const x = Math.random() * 100;
-  const delay = Math.random() * 0.4;
-  const duration = 1.6 + Math.random() * 1.6;
-  const size = 7 + Math.random() * 8;
-  const rotation = Math.random() * 720;
-
-  return (
-    <motion.div
-      className="fixed pointer-events-none"
-      style={{
-        left: `${x}%`,
-        top: '-5%',
-        width: size,
-        height: size * 0.65,
-        backgroundColor: color,
-        borderRadius: 2,
-        zIndex: 100,
-        boxShadow: `0 0 6px ${color}`,
-      }}
-      initial={{ y: 0, opacity: 1, rotate: 0 }}
-      animate={{
-        y: typeof window !== 'undefined' ? window.innerHeight + 80 : 800,
-        opacity: [1, 1, 0],
-        rotate: rotation,
-        x: (Math.random() - 0.5) * 220,
-      }}
-      transition={{ duration, delay, ease: 'linear' }}
-    />
-  );
-};
-
-const FlyingSticker: React.FC<{ emoji: string; index: number }> = ({ emoji, index }) => {
-  const x = 8 + (index * 13) % 84;
-  const y = 12 + (index * 17) % 76;
-  const delay = 0.15 + (index % 8) * 0.12;
-
-  return (
-    <motion.div
-      className="fixed pointer-events-none select-none"
-      style={{
-        left: `${x}%`,
-        top: `${y}%`,
-        zIndex: 105,
-        fontSize: 'clamp(26px, 5.5vw, 38px)',
-        filter: 'drop-shadow(0 4px 10px rgba(244, 143, 177, 0.35))',
-      }}
-      initial={{ scale: 0, opacity: 0, rotate: -25, y: 20 }}
-      animate={{
-        scale: [0, 1.35, 1, 1.15, 1],
-        opacity: [0, 1, 1, 1, 0.95],
-        rotate: [0, 15, -10, 8, 0],
-        y: [20, -10, 0, -5, 0],
-      }}
-      transition={{ duration: 2.2, delay, ease: 'easeOut' }}
-    >
-      {emoji}
-    </motion.div>
-  );
-};
 
 // ─── TicTacToe Component ──────────────────────────────────────────
 const TicTacToe: React.FC = () => {
@@ -257,19 +189,8 @@ const TicTacToe: React.FC = () => {
         </div>
       ))}
 
-      {/* Celebration Effects (Confetti + Floating Stickers) */}
-      <AnimatePresence>
-        {showCelebration && (
-          <>
-            {Array.from({ length: 50 }).map((_, i) => (
-              <ConfettiParticle key={`conf-${i}`} index={i} />
-            ))}
-            {CELEBRATION_STICKERS.map((emoji, i) => (
-              <FlyingSticker key={`sticker-${i}`} emoji={emoji} index={i} />
-            ))}
-          </>
-        )}
-      </AnimatePresence>
+      {/* Celebration Effects (Heart Shower) */}
+      {showCelebration && <HeartShower />}
 
       <motion.div
         className="flex flex-col items-center gap-4 relative z-10 max-w-sm w-full my-auto"

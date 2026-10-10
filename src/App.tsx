@@ -7,6 +7,7 @@ import WishScene  from './phases/WishScene';
 import WishCards  from './phases/WishCards';
 import FinalLetter from './phases/FinalLetter';
 import TicTacToe from './phases/TicTacToe';
+import MagicCursor from './components/MagicCursor';
 
 // ─── Phase type ───────────────────────────────────────────────────
 type Phase = 'dark' | 'flash' | 'lit' | 'cake' | 'wish' | 'cards' | 'letter' | 'game';
@@ -34,6 +35,7 @@ export default function App() {
 
   return (
     <>
+      <MagicCursor />
       {/* ── Light flash overlay ───────────────────────────────── */}
       <AnimatePresence>
         {phase === 'flash' && (
